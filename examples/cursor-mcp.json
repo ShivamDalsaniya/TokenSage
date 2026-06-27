@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "token-sage": {
+      "command": "node",
+      "args": ["/Users/YOUR_USERNAME/token-sage/dist/server/index.js"],
+      "env": {
+        "DASHBOARD_PORT": "7777"
+      }
+    }
+  }
+}

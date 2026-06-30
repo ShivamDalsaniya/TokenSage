@@ -179,7 +179,7 @@ export function handleSummarizeConversation(input: SummarizeConversationInput): 
   ].filter(Boolean).join("\n");
 
   const tokens = calculateSavings(originalText, compressedText);
-  sessionTracker.record("summarize_conversation", tokens);
+  sessionTracker.record("summarize_conversation", tokens, "conversation");
 
   return {
     goals: goals.length > 0 ? goals : ["No explicit goals detected — see key context"],

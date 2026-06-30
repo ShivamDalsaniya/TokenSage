@@ -90,7 +90,7 @@ process.stdin.on("end", async () => {
     void fetch(`http://localhost:${dashPort}/api/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tool: "bash_compress", tokens: savings }),
+      body: JSON.stringify({ tool: "bash_compress", tokens: savings, target: "bash output" }),
       signal: AbortSignal.timeout(2000),
     }).catch(() => {});
 

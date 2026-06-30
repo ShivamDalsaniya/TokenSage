@@ -42,10 +42,11 @@ process.stdin.on("end", async () => {
     if (!tokens) process.exit(0);
 
     const toolLabel = tool.toLowerCase() + "_operation";
+    const target = input["file_path"]?.split("/").pop() ?? input["path"]?.split("/").pop();
     await fetch(`http://localhost:${dashPort}/api/track`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tool: toolLabel, tokens }),
+      body: JSON.stringify({ tool: toolLabel, tokens, target }),
       signal: AbortSignal.timeout(2000),
     }).catch(() => {});
   } catch { /* non-fatal */ }

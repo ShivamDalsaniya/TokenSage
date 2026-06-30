@@ -168,7 +168,7 @@ export async function handleSemanticRelevance(input: SemanticRelevanceInput): Pr
     savedPercent: originalTokens > 0 ? Math.round(((originalTokens - optimizedTokens) / originalTokens) * 100) : 0,
   };
 
-  sessionTracker.record("semantic_relevance", tokens);
+  sessionTracker.record("semantic_relevance", tokens, input.directory.split("/").pop() ?? input.directory);
 
   return { query: input.query, results: topResults, tokens };
 }

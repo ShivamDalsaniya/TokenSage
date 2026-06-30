@@ -15,7 +15,7 @@ export type SummarizeLogsInput = z.infer<typeof summarizeLogsSchema>;
 
 export function handleSummarizeLogs(input: SummarizeLogsInput): CompressedLogs {
   const result = compressLogs(input.logs);
-  sessionTracker.record("summarize_logs", result.tokens);
+  sessionTracker.record("summarize_logs", result.tokens, "logs");
   return result;
 }
 

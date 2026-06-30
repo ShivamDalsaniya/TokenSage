@@ -5,6 +5,7 @@ interface RequestRecord {
   tool: string;
   tokens: TokenCount;
   timestamp: string;
+  target?: string;
 }
 
 const MAX_REQUESTS = 10_000;
@@ -20,7 +21,7 @@ class SessionTracker {
     this.startedAt = new Date().toISOString();
   }
 
-  record(tool: string, tokens: TokenCount): void {
+  record(tool: string, tokens: TokenCount, target?: string): void {
     if (this.requests.length >= MAX_REQUESTS) {
       this.requests.shift();
     }
@@ -28,6 +29,7 @@ class SessionTracker {
       tool,
       tokens,
       timestamp: new Date().toISOString(),
+      target,
     });
     this.allTimeSavedTokens += tokens.saved;
   }
@@ -75,6 +77,7 @@ class SessionTracker {
 
   getRecentActivity(n = 20): Array<{
     tool: string;
+    target?: string;
     savedTokens: number;
     originalTokens: number;
     savedPercent: number;
@@ -85,6 +88,7 @@ class SessionTracker {
       .reverse()
       .map(r => ({
         tool: r.tool,
+        target: r.target,
         savedTokens: r.tokens.saved,
         originalTokens: r.tokens.original,
         savedPercent: r.tokens.savedPercent,

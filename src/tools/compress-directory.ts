@@ -245,7 +245,7 @@ export async function handleCompressDirectory(input: CompressDirectoryInput): Pr
 
   const tokens = calculateSavings(originalContent, optimizedContent);
 
-  sessionTracker.record("compress_directory", tokens);
+  sessionTracker.record("compress_directory", tokens, input.path.split("/").pop() ?? input.path);
 
   return {
     path: input.path,

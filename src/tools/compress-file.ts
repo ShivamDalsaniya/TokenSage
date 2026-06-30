@@ -15,7 +15,7 @@ export async function handleCompressFile(input: CompressFileInput): Promise<Comp
     ? compressContent(input.content, input.path)
     : await compressFile(input.path);
 
-  sessionTracker.record("compress_file", result.tokens);
+  sessionTracker.record("compress_file", result.tokens, input.path.split("/").pop() ?? input.path);
   return result;
 }
 

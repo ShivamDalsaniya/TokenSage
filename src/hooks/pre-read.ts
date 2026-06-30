@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * TokenSage PreToolUse hook — intercepts large file reads and returns
- * compressed structural skeletons to save context-window tokens.
+ * TokenSage PreToolUse hook — intercepts large file reads and returns * compressed structural skeletons to save context-window tokens.
  *
  * Rules:
  *  - Only fires on the Read tool
@@ -19,6 +18,7 @@
 import { readFileSync } from "fs";
 import { extname } from "path";
 import { compressContent } from "../compression/code-compressor.js";
+import { countTokens } from "../analytics/token-counter.js";
 import { computeProjectPort } from "../config/index.js";
 
 const _rawPort = parseInt(process.env["DASHBOARD_PORT"] ?? "", 10);
@@ -52,11 +52,10 @@ process.stdin.on("end", async () => {
     const filePath = call.tool_input?.["file_path"];
     if (typeof filePath !== "string") process.exit(0);
 
-    // Targeted reads (offset/limit) pass through — needed for precise editing
-    if (call.tool_input?.["offset"] != null || call.tool_input?.["limit"] != null) process.exit(0);
-
+    const hasOffsetOrLimit = call.tool_input?.["offset"] != null || call.tool_input?.["limit"] != null;
     const ext = extname(filePath).toLowerCase();
-    if (!CODE_EXTENSIONS.has(ext)) process.exit(0);
+    const isCodeFile = CODE_EXTENSIONS.has(ext);
+    const target = filePath.split("/").pop() ?? filePath;
 
     let content: string;
     try {
@@ -66,19 +65,32 @@ process.stdin.on("end", async () => {
     }
 
     const lineCount = content.split("\n").length;
-    if (lineCount < COMPRESS_THRESHOLD_LINES) process.exit(0);
+    const rawTokens = countTokens(content);
+
+    async function trackRead(tool: string, tokens: { original: number; optimized: number; saved: number; savedPercent: number }) {
+      await fetch(`http://localhost:${dashPort}/api/track`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool, tokens, target }),
+        signal: AbortSignal.timeout(2000),
+      }).catch(() => {});
+    }
+
+    // Targeted reads, non-code files, or small files — track then pass through
+    if (hasOffsetOrLimit || !isCodeFile || lineCount < COMPRESS_THRESHOLD_LINES) {
+      await trackRead("read_operation", { original: rawTokens, optimized: rawTokens, saved: 0, savedPercent: 0 });
+      process.exit(0);
+    }
 
     const result = compressContent(content, filePath);
 
-    if (result.tokens.savedPercent < MIN_SAVINGS_PCT) process.exit(0);
+    if (result.tokens.savedPercent < MIN_SAVINGS_PCT) {
+      await trackRead("read_operation", { original: rawTokens, optimized: rawTokens, saved: 0, savedPercent: 0 });
+      process.exit(0);
+    }
 
     // Track compression savings — awaited so process doesn't exit before fetch completes
-    await fetch(`http://localhost:${dashPort}/api/track`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tool: "auto_compress_read", tokens: result.tokens }),
-      signal: AbortSignal.timeout(2000),
-    }).catch(() => {}); // non-fatal
+    await trackRead("auto_compress_read", result.tokens);
 
     // Build compressed output
     const lines: string[] = [

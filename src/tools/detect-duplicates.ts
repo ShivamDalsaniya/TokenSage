@@ -136,7 +136,7 @@ export function handleDetectDuplicates(input: DetectDuplicatesInput): Deduplicat
 
   const deduplicatedText = uniqueItems.join("\n---\n");
   const tokens = calculateSavings(originalText, deduplicatedText);
-  sessionTracker.record("detect_duplicates", tokens);
+  sessionTracker.record("detect_duplicates", tokens, `${input.items.length} items`);
 
   return {
     originalCount: items.length,

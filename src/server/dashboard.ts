@@ -179,14 +179,14 @@ body{
 .ov-ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .ov-pct{font-size:28px;font-weight:700;color:#10b981;letter-spacing:-0.5px;}
 .ov-pct-sub{font-size:10px;color:#6b7280;font-weight:600;}
-.ov-banner{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 16px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-top-left-radius:0;border-top-right-radius:0;}
+.ov-banner{display:flex;align-items:center;justify-content:space-between;margin-top:14px;margin-bottom:12px;padding:10px 16px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:6px;}
 .ov-banner-l{display:flex;align-items:center;gap:8px;font-size:12px;color:#f9fafb;}
 .ov-banner-chk{color:#10b981;font-weight:700;}
 .ov-banner-r{display:flex;align-items:center;gap:6px;font-size:12px;color:#10b981;font-weight:600;}
 /* Bottom */
-.bottom{flex:1;min-height:0;display:grid;grid-template-columns:1fr 400px;overflow:hidden;}
+.bottom{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;overflow:hidden;background:transparent;padding:12px 24px 12px;}
 /* Table */
-.tbl-card{display:flex;flex-direction:column;overflow:hidden;padding:14px 24px 10px;border-right:1px solid rgba(255,255,255,0.05);}
+.tbl-card{display:flex;flex-direction:column;overflow:hidden;padding:16px 18px 12px;background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
 .tbl-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#6b7280;margin-bottom:10px;flex-shrink:0;}
 .tbl-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.04) transparent;}
 .tbl-scroll::-webkit-scrollbar{width:2px;}
@@ -209,7 +209,7 @@ tbody td:first-child{padding-left:0;}
 .tr-total{border-top:1px solid rgba(255,255,255,0.08)!important;background:rgba(255,255,255,0.02);}
 .tr-total td{padding-top:9px!important;padding-bottom:9px!important;font-weight:600;color:#9ca3af;}
 /* Activity */
-.act-card{display:flex;flex-direction:column;overflow:hidden;padding:14px 14px 10px;}
+.act-card{display:flex;flex-direction:column;overflow:hidden;padding:16px 18px 12px;background:#0d1117;border:1px solid rgba(255,255,255,0.08);border-radius:8px;}
 .act-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0;}
 .act-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#6b7280;}
 .act-view{font-size:11px;color:#3b82f6;text-decoration:none;}
@@ -226,7 +226,7 @@ tbody td:first-child{padding-left:0;}
 .act-saved-v.none{color:#4b5563;}
 .act-time{font-size:10px;color:#4b5563;}
 /* Footer */
-.footer{flex-shrink:0;height:30px;display:flex;align-items:center;padding:0 24px;border-top:1px solid rgba(255,255,255,0.05);background:rgba(17,24,39,0.3);}
+.footer{flex-shrink:0;height:36px;display:flex;align-items:center;padding:0 24px;border-top:1px solid rgba(255,255,255,0.12);background:#060810;}
 .footer-l{display:flex;align-items:center;gap:7px;flex:1;}
 .footer-zap{color:#3b82f6;}
 .footer-txt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.1px;color:#3b82f6;}
@@ -412,6 +412,7 @@ tbody td:first-child{padding-left:0;}
 <script>
 const TM={
   auto_compress_read:{icon:'\u{1F4C4}',verb:'Compressed',color:'#8b5cf6',bg:'rgba(139,92,246,0.15)'},
+  read_operation:    {icon:'\u{1F4C4}',verb:'Read',      color:'#6b7280',bg:'rgba(107,114,128,0.15)'},
   write_guard:       {icon:'\u{1F6E1}',verb:'Guarded',   color:'#3b82f6',bg:'rgba(59,130,246,0.15)'},
   user_prompt:       {icon:'\u{1F4AC}',verb:'Prompted',  color:'#10b981',bg:'rgba(16,185,129,0.15)'},
   edit_operation:    {icon:'\u270F',   verb:'Edited',    color:'#3b82f6',bg:'rgba(59,130,246,0.15)'},
@@ -569,7 +570,7 @@ function buildAct(activity){
       '<div class="act-icon-box" style="background:'+m.bg+';border:1px solid '+m.color+'40;color:'+m.color+'">'+m.icon+'</div>'+
       '<div class="act-body">'+
         '<div class="act-verb">'+m.verb+'</div>'+
-        '<div class="act-name">'+esc(r.tool.replace(/_/g,' '))+'</div>'+
+        '<div class="act-name">'+esc(r.target||r.tool.replace(/_/g,' '))+'</div>'+
       '</div>'+
       '<div class="act-right"><div class="'+cls+'">'+saved+'</div><div class="act-time">'+ago(r.timestamp)+'</div></div>'+
     '</div>';
@@ -719,8 +720,6 @@ export async function startDashboard(
 ): Promise<void> {
   const url = `http://localhost:${port}`;
   const fastify = Fastify({ logger: false });
-  const html = buildDashboardHtml(projectName);
-
   // Stats API
   fastify.get("/api/stats", async () => {
     const session = sessionTracker.getSessionStats();
@@ -733,8 +732,8 @@ export async function startDashboard(
 
   // Track endpoint — hooks POST token events here
   fastify.post("/api/track", async (req) => {
-    const { tool, tokens } = req.body as { tool: string; tokens: { original: number; optimized: number; saved: number; savedPercent: number } };
-    sessionTracker.record(tool, tokens);
+    const { tool, tokens, target } = req.body as { tool: string; tokens: { original: number; optimized: number; saved: number; savedPercent: number }; target?: string };
+    sessionTracker.record(tool, tokens, target);
     if (tokens.saved > 0) syncSavingsToDaemon(tokens.saved);
     return { ok: true };
   });
@@ -768,9 +767,12 @@ export async function startDashboard(
   // Health check
   fastify.get("/health", async () => ({ status: "ok", service: "token-sage-dashboard", project: projectName, port }));
 
-  // Dashboard HTML
+  // Dashboard HTML — rebuild each request so updates reflect without restart
   fastify.get("/", async (_req, reply) => {
-    reply.type("text/html").send(html);
+    reply
+      .header("Cache-Control", "no-store")
+      .type("text/html")
+      .send(buildDashboardHtml(projectName));
   });
 
   try {

@@ -11,86 +11,98 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/token-sage"><img src="https://img.shields.io/npm/v/token-sage?color=10b981&label=npm&style=flat-square" alt="npm version"/></a>
-  <a href="https://github.com/ShivamDalsaniya/TokenSage/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square" alt="MIT License"/></a>
+  <a href="https://github.com/ShivamDalsaniya/TokenSage/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square" alt="MIT License"/></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square" alt="Node 22+"/>
   <img src="https://img.shields.io/badge/MCP-compatible-10b981?style=flat-square" alt="MCP compatible"/>
 </p>
 
 <p align="center">
-  Works with <strong>Claude Code</strong> · <strong>Cursor</strong> · <strong>Codex CLI</strong> · <strong>Cline</strong> · <strong>Roo Code</strong> · <strong>Gemini CLI</strong> · <strong>OpenCode</strong>
+  Works with <strong>Claude Code</strong> · <strong>Cursor</strong> · <strong>Codex CLI</strong> · <strong>Cline</strong> · <strong>Roo Code</strong> · <strong>Gemini CLI</strong> · <strong>OpenCode</strong> · any MCP client
 </p>
 
 ---
 
 ## What is TokenSage?
 
-TokenSage is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that sits between your AI client and the LLM. It intercepts every file read, bash command, and conversation turn — compressing the content before the model sees it — then tracks exactly how many tokens were saved using **real encoding**, not ratios.
+TokenSage is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that sits between your AI client and the LLM. It intercepts every file read, bash command, and conversation turn — compressing the content before the model sees it — then tracks exactly how many tokens were saved using **real encoding**, not estimates.
 
 > **167,000 tokens saved in a single session — measured, not estimated.**
 
-Token counts use **gpt-tokenizer (cl100k_base)** on actual before/after text. The savings numbers you see are real measurements from real encoding runs.
+Token counts use **gpt-tokenizer (cl100k_base)** on actual before/after text. Every number in the dashboard is a real measurement.
 
-## Architecture
+## How It Works
 
 ![TokenSage Architecture](assets/TokenSageInfo.webp)
 
+---
+
 ## Quick Start
 
-The fastest way to get TokenSage running — no installation required:
-
-```bash
-npx token-sage
-```
-
-Dashboard opens automatically at **http://localhost:7450**
-
-**Global install (faster startup):**
+**Recommended — one command setup:**
 ```bash
 npm install -g token-sage
-token-sage
+tokensage install
+```
+
+`tokensage install` automatically adds the MCP server and all hooks to your Claude Code settings. Restart Claude Code — done.
+
+**No install (npx):**
+```bash
+npx token-sage
 ```
 
 **From source:**
 ```bash
 git clone https://github.com/ShivamDalsaniya/TokenSage.git
 cd TokenSage
-npm install && npm run build
+npm install --legacy-peer-deps && npm run build
 npm start
 ```
 
 ---
 
+## Client Compatibility
+
+| Feature | Claude Code | Cursor | Codex CLI | Cline | Gemini CLI | Roo Code |
+|---------|:-----------:|:------:|:---------:|:-----:|:----------:|:--------:|
+| MCP Tools (compress, summarize…) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Auto hooks (compress every read) | ✓ | — | — | — | — | — |
+| Real-time dashboard | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+**Hooks** (automatic per-read compression) require Claude Code's hook system. All other clients get MCP tools + dashboard — still significant savings when used explicitly.
+
+---
+
 ## How It Works
 
-TokenSage compresses context through two independent layers. Use one or both.
+TokenSage compresses context through two layers.
 
-### Layer 1: Hooks (Automatic, Zero Config)
+### Layer 1: Hooks (Automatic — Claude Code only)
 
-Hooks are shell commands registered with your AI client. Claude Code calls them before/after every tool use. You never change a prompt.
+Registered once. Fire on every tool call. You never change a prompt.
 
-| Hook | Trigger | What it does | Typical savings |
-|------|---------|--------------|----------------|
-| `auto_compress_read` | Before every `Read` | Returns a structural skeleton (symbols, imports, exports) instead of full source | 50–99% |
-| `post_bash` | After every `Bash` | Trims verbose stdout — keeps errors, strips noise | 60–80% |
-| `edit_operation` | After `Write` / `Edit` | Records diff size vs full file write for analytics | Analytics |
-| `user_prompt` | Before each prompt | Compresses large code blocks inline before they hit the context window | 40–70% |
+| Hook | Trigger | What it does | Savings |
+|------|---------|--------------|---------|
+| `auto_compress_read` | Before every `Read` | Returns structural skeleton instead of full source | 50–99% |
+| `post_bash` | After every `Bash` | Trims verbose stdout, keeps errors | 60–80% |
+| `edit_operation` | After `Edit` / `Write` | Tracks diff savings vs full file write | Analytics |
+| `user_prompt` | Before each prompt | Compresses large inline code blocks | 40–70% |
 
-**Supported languages for structural compression:**
-TypeScript · JavaScript · Python · Go · Rust · Java · C/C++ · C# · Ruby · PHP · Swift · Kotlin · Scala · Vue · Svelte
+**Supported languages:** TypeScript · JavaScript · Python · Go · Rust · Java · C/C++ · C# · Ruby · PHP · Swift · Kotlin · Scala · Vue · Svelte
 
-### Layer 2: MCP Tools (Explicit)
+### Layer 2: MCP Tools (All clients)
 
-Call these directly inside Claude when you want deeper, targeted compression on specific files or a long conversation.
+Call these explicitly inside your AI client for deeper, targeted compression.
 
-| Tool | What it does | Typical savings |
-|------|-------------|----------------|
-| `compress_file` | Source code → purpose + symbols + imports + exports skeleton | 60–90% |
-| `compress_directory` | Repo → architecture + dependency graph + key files summary | 70–95% |
+| Tool | What it does | Savings |
+|------|-------------|---------|
+| `compress_file` | Source code → symbols + imports + exports skeleton | 60–90% |
+| `compress_directory` | Repo → architecture + dependency graph + key files | 70–95% |
 | `summarize_logs` | Raw logs → status + unique errors + action summary | 80–95% |
 | `summarize_conversation` | Long chat → goals + tasks + decisions + blockers | 60–85% |
-| `detect_duplicates` | Remove repeated stack traces and duplicate chunks from context | 50–90% |
-| `semantic_relevance` | Rank files by query relevance — load only what actually matters | 70–95% |
-| `context_budget` | Calculate token cost and fit context within a model's budget | Analytics |
+| `detect_duplicates` | Remove repeated stack traces and duplicate chunks | 50–90% |
+| `semantic_relevance` | Rank files by query — load only what matters | 70–95% |
+| `context_budget` | Calculate token cost, fit context within budget | Analytics |
 | `token_usage_report` | Full session + all-time savings report | Analytics |
 
 ---
@@ -99,22 +111,31 @@ Call these directly inside Claude when you want deeper, targeted compression on 
 
 ![TokenSage Dashboard](src/public/dashboard-img.png)
 
-The real-time dashboard at **http://localhost:7450** shows:
+The real-time dashboard shows:
 
 - **Tokens saved** — live count for the current session
 - **Optimization %** — average reduction across all tool calls
 - **Requests** — total compressions this session
-- **Time saved** — estimated at 300 tokens/min reading speed
-- **Tool effectiveness** — per-tool breakdown with call counts and share
-- **Recent activity** — live feed of every file compressed with before/after sizes
+- **Time saved** — estimated developer time at 300 tokens/min
+- **Tool effectiveness** — per-tool breakdown with call counts
+- **Recent activity** — live feed of every compression with before/after sizes
 
-The port is **auto-computed per project** (range 7450–7999, derived from project path hash), so multiple projects each get their own dashboard without conflicts.
+Port is **auto-computed per project** (hash of project path, range 7450–7999) — multiple projects each get their own dashboard with no conflicts.
 
 ---
 
 ## Installation
 
-### Claude Code
+### Claude Code — Automatic (Recommended)
+
+```bash
+npm install -g token-sage
+tokensage install
+```
+
+Restart Claude Code. Everything is wired automatically.
+
+### Claude Code — Manual
 
 Add to `~/.claude/settings.json`:
 
@@ -130,41 +151,46 @@ Add to `~/.claude/settings.json`:
     "PreToolUse": [
       {
         "matcher": "Read",
-        "hooks": [
-          { "type": "command", "command": "npx token-sage hook:pre-read" }
-        ]
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:pre-read" }]
       },
       {
-        "matcher": "Write|Edit",
-        "hooks": [
-          { "type": "command", "command": "npx token-sage hook:pre-write" }
-        ]
+        "matcher": "Write",
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:pre-write" }]
       }
     ],
     "PostToolUse": [
       {
+        "matcher": "Edit",
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:post-tool-edit" }]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:post-tool-edit" }]
+      },
+      {
         "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "command": "npx token-sage hook:post-bash" }
-        ]
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:post-bash" }]
       }
     ],
     "SessionStart": [
       {
-        "hooks": [
-          { "type": "command", "command": "npx token-sage hook:session-start" }
-        ]
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:session-start" }]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [{ "type": "command", "command": "npx token-sage hook:user-prompt" }]
       }
     ]
   }
 }
 ```
 
-Restart Claude Code. The `auto_compress_read` hook fires on every file read from that point on — no other changes needed.
+Restart Claude Code.
 
 ### Cursor
 
-Add to `.cursor/mcp.json` in your project root:
+Add to `~/.cursor/mcp.json`:
 
 ```json
 {
@@ -177,32 +203,38 @@ Add to `.cursor/mcp.json` in your project root:
 }
 ```
 
-### Other Clients
+### Codex CLI
 
-**Codex CLI:**
 ```bash
 codex mcp add token-sage npx token-sage
 ```
 
-**Gemini CLI:**
+### Gemini CLI
+
 ```bash
 gemini mcp add token-sage -- npx token-sage
 ```
 
-**Cline / Roo Code:**
-In the MCP settings panel, add a new server with command `npx` and args `token-sage`.
+### Cline / Roo Code
 
-**Any MCP-compatible client:**
-Point it at `npx token-sage`. The server speaks standard MCP over stdio.
+In the MCP settings panel: command `npx`, args `token-sage`.
+
+### Any MCP Client
+
+```json
+{
+  "command": "npx",
+  "args": ["token-sage"]
+}
+```
 
 ---
 
 ## Token Counting — Real Data, Not Estimates
 
-Token counts are measured using **gpt-tokenizer** (`cl100k_base` encoding) on actual before/after text — the same tokenizer used by GPT-4 and closely matching Claude's tokenization:
+Token counts use **gpt-tokenizer** (`cl100k_base`) on actual before/after text — same tokenizer as GPT-4, closely matching Claude's tokenization:
 
 ```typescript
-// src/analytics/token-counter.ts
 import { encode } from 'gpt-tokenizer';
 
 export function countTokens(text: string): number {
@@ -210,36 +242,33 @@ export function countTokens(text: string): number {
 }
 ```
 
-Every compression hook runs `countTokens(original)` and `countTokens(compressed)`, stores both values, and reports the difference. The dashboard shows these real measurements — not estimates, not heuristics.
+Every hook runs `countTokens(original)` and `countTokens(compressed)`, stores both, and reports the real difference. No estimates, no heuristics.
 
 ---
 
 ## Configuration
 
-All settings can be overridden via environment variables:
-
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DASHBOARD_PORT` | `7450` | Dashboard HTTP port (auto-computed per project if unset) |
+| `DASHBOARD_PORT` | auto | Dashboard port (auto-computed from project path hash) |
 | `DASHBOARD_HOST` | `localhost` | Dashboard bind host |
-| `DASHBOARD_ENABLED` | `true` | Enable or disable the dashboard server |
-| `TOKENSAGE_NO_COMPRESS` | — | Set to `1` to disable auto-compression globally |
-| `TOKENSAGE_COMPRESS_THRESHOLD` | `100` | Minimum lines before compressing a file |
-| `TOKENSAGE_MIN_SAVINGS_PCT` | `15` | Minimum savings % required before blocking a read |
-| `LOG_LEVEL` | `info` | Logging verbosity (`debug`, `info`, `warn`, `error`) |
-| `MAX_FILE_SIZE_BYTES` | `512000` | Maximum file size considered for compression (512 KB) |
+| `DASHBOARD_ENABLED` | `true` | Enable or disable the dashboard |
+| `TOKENSAGE_NO_COMPRESS` | — | Set to `1` to disable auto-compression |
+| `TOKENSAGE_COMPRESS_THRESHOLD` | `100` | Min lines before compressing a file |
+| `TOKENSAGE_MIN_SAVINGS_PCT` | `15` | Min savings % before blocking a read |
+| `LOG_LEVEL` | `info` | Logging verbosity |
+| `MAX_FILE_SIZE_BYTES` | `512000` | Max file size for analysis (512 KB) |
 
 ---
 
 ## Development
 
 ```bash
-npm run dev          # Run with tsx — no build step needed
+npm run dev          # Run with tsx — no build needed
 npm run build        # Compile TypeScript to dist/
-npm test             # Run test suite (83 tests)
-npm run test:watch   # Watch mode for TDD
+npm test             # Run test suite
+npm run typecheck    # tsc --noEmit
 npm run lint         # ESLint
-npm run typecheck    # tsc --noEmit — zero errors enforced
 ```
 
 ### Project Structure
@@ -247,54 +276,33 @@ npm run typecheck    # tsc --noEmit — zero errors enforced
 ```
 src/
 ├── server/
-│   ├── index.ts              # MCP stdio server + tool registration
-│   └── dashboard.ts          # Fastify web dashboard (real-time SSE)
+│   ├── index.ts              # MCP stdio server + hook routing (npx token-sage hook:*)
+│   └── dashboard.ts          # Fastify web dashboard (real-time)
 ├── hooks/
-│   ├── pre-read.ts           # Intercepts Read — compresses large code files
-│   ├── pre-write.ts          # Tracks write/edit operations
+│   ├── pre-read.ts           # Intercepts Read — compresses large files
+│   ├── pre-write.ts          # Guards against unnecessary full rewrites
 │   ├── post-bash.ts          # Trims verbose bash output
-│   ├── post-tool-edit.ts     # Post-edit diff tracking
-│   ├── user-prompt.ts        # Compresses prompts with large code blocks
-│   └── session-start.ts      # Registers session with daemon
-├── tools/
-│   ├── compress-file.ts
-│   ├── compress-directory.ts
-│   ├── summarize-logs.ts
-│   ├── summarize-conversation.ts
-│   ├── detect-duplicates.ts
-│   ├── semantic-relevance.ts
-│   ├── context-budget.ts
-│   └── token-usage-report.ts
-├── compression/
-│   ├── code-compressor.ts    # File → structural skeleton (multi-language)
-│   └── log-compressor.ts     # Logs → deduplicated summary
-├── analytics/
-│   ├── token-counter.ts      # gpt-tokenizer cl100k_base real counting
-│   └── session-tracker.ts    # Per-session stats accumulator
-├── parsers/
-│   ├── code-parser.ts        # Multi-language parser (tree-sitter)
-│   └── languages/            # Per-language grammars: TS, JS, Python, Go, Rust…
-├── daemon/
-│   ├── index.ts              # Background daemon for cross-session tracking
-│   ├── project-registry.ts   # Per-project port assignment (7450–7999)
-│   └── session-manager.ts    # Session registry with 48h auto-expire
-└── config/
-    └── index.ts              # Configuration + env var resolution
+│   ├── post-tool-edit.ts     # Tracks edit/write token savings
+│   ├── user-prompt.ts        # Compresses inline code blocks in prompts
+│   └── session-start.ts      # Launches dashboard, registers session
+├── tools/                    # MCP tool handlers (compress, summarize, etc.)
+├── compression/              # Code + log compressors (multi-language)
+├── analytics/                # Token counter + session tracker
+├── daemon/                   # Background daemon for cross-session tracking
+└── config/                   # Configuration + port computation
 ```
 
 ---
 
 ## Contributing
 
-Pull requests welcome. Before submitting:
+PRs welcome. Before submitting:
 
 ```bash
-npm test          # All 83 tests must pass
+npm test          # Tests must pass
 npm run typecheck # Zero TypeScript errors
 npm run lint      # Zero lint warnings
 ```
-
-Open an issue first for large changes. Keep PRs focused — one feature or fix per PR.
 
 ---
 

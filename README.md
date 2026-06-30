@@ -5,7 +5,7 @@
 <h1 align="center">TokenSage</h1>
 
 <p align="center">
-  <strong>MCP server that slashes LLM token usage by 50–99% — transparently, in real time.</strong><br/>
+  <strong>MCP server that slashes LLM token usage — transparently, in real time.</strong><br/>
   Every file read, bash call, and prompt is compressed before the LLM ever sees it. Zero workflow changes.
 </p>
 

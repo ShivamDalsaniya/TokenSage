@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/token-sage"><img src="https://img.shields.io/npm/v/token-sage?color=10b981&label=npm&style=flat-square" alt="npm version"/></a>
+  <a href="https://www.npmjs.com/package/token-sage"><img src="https://img.shields.io/bundlephobia/minzip/token-sage?color=f59e0b&label=size&style=flat-square" alt="minified + gzip size"/></a>
   <a href="https://github.com/ShivamDalsaniya/TokenSage/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-3b82f6?style=flat-square" alt="MIT License"/></a>
   <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square" alt="Node 22+"/>
   <img src="https://img.shields.io/badge/MCP-compatible-10b981?style=flat-square" alt="MCP compatible"/>
@@ -30,7 +31,7 @@ TokenSage is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io) s
 
 Token counts use **gpt-tokenizer (cl100k_base)** on actual before/after text. Every number in the dashboard is a real measurement.
 
-## How It Works
+## Architecture
 
 ![TokenSage Architecture](assets/TokenSageInfo.webp)
 

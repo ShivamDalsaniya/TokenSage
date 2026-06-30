@@ -1,6 +1,6 @@
 {
   "name": "token-sage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server that reduces LLM token usage by 50%+ while preserving coding accuracy",
   "type": "module",
   "main": "dist/server/index.js",
@@ -38,12 +38,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/token-sage/token-sage"
+    "url": "https://github.com/ShivamDalsaniya/TokenSage.git"
+  },
+  "homepage": "https://github.com/ShivamDalsaniya/TokenSage#readme",
+  "bugs": {
+    "url": "https://github.com/ShivamDalsaniya/TokenSage/issues"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets"
   ],
   "dependencies": {
     "@fastify/cors": "^10.0.2",

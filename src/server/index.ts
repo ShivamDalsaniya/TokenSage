@@ -214,6 +214,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // ── Start ────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
+  // Hook routing — `npx token-sage hook:<name>` pipes stdin through the hook
+  const hookArg = process.argv[2];
+  if (hookArg?.startsWith("hook:")) {
+    const hookName = hookArg.slice(5);
+    const hookMap: Record<string, string> = {
+      "pre-read":      "../hooks/pre-read.js",
+      "post-bash":     "../hooks/post-bash.js",
+      "post-tool-edit":"../hooks/post-tool-edit.js",
+      "session-start": "../hooks/session-start.js",
+      "pre-write":     "../hooks/pre-write.js",
+      "user-prompt":   "../hooks/user-prompt.js",
+    };
+    const hookFile = hookMap[hookName];
+    if (!hookFile) { console.error(`Unknown hook: ${hookName}`); process.exit(1); }
+    await import(hookFile);
+    return;
+  }
+
   // Start dashboard if enabled
   if (DEFAULT_CONFIG.dashboard.enabled) {
     await startDashboard(DEFAULT_CONFIG.dashboard.port);

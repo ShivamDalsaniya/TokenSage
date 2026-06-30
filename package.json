@@ -1,6 +1,6 @@
 {
   "name": "token-sage",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server that reduces LLM token usage by 50%+ while preserving coding accuracy",
   "type": "module",
   "main": "dist/server/index.js",
